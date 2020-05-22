@@ -1,9 +1,8 @@
-package com.model2.mvc.web.product;
+package com.model2.mvc.web.purchase;
 
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpServletRequest; 
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -18,19 +17,19 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.model2.mvc.common.Page;
 import com.model2.mvc.common.Search;
 import com.model2.mvc.service.domain.Product;
-import com.model2.mvc.service.domain.User;
+import com.model2.mvc.service.domain.Purchase;
 import com.model2.mvc.service.product.ProductService;
-import com.model2.mvc.service.user.UserService;
+import com.model2.mvc.service.purchase.PurchaseService; 
  
 @Controller
-@RequestMapping("/product/*")
-public class ProductController {
+@RequestMapping("/purchase/*")
+public class PurchaseController {
 	 
 	@Autowired
-	@Qualifier("productServiceImpl")
-	private ProductService productService;
+	@Qualifier("purchaseServiceImpl")
+	private PurchaseService purchaseService;
  		
-	public ProductController(){
+	public PurchaseController(){
 		System.out.println(this.getClass());
 	}
 	
@@ -40,82 +39,75 @@ public class ProductController {
 	int pageSize;
 	
 	
-	//addProduct View
-	@RequestMapping (  value="addProduct", method=RequestMethod.GET )
-	public String addProduct() throws Exception {
-  
+
+	// addPurchase View
+	@RequestMapping  ( value="addProduct", method=RequestMethod.GET )
+	public String addPurchase() throws Exception { 
 		return "redirect:/product/addProductView.jsp";
 	}
 	
-	
-	//addProduct
-	@RequestMapping (  value="addProduct", method=RequestMethod.POST )
-	public String addProduct( @ModelAttribute("product") Product product , Model model ) throws Exception {
+	// addPurchase
+	@RequestMapping  ( value="addProduct", method=RequestMethod.POST )
+	public String addPurchase( @ModelAttribute("purchase") Purchase purchase , Model model ) throws Exception {
 		
-		Product prod = product; 
-		prod.setProdTranCode("000");
-		prod.setManuDay(prod.getManuDay().substring(2,10));
-		productService.addProduct(product); 
+		Purchase psvo = purchase;
 		
-		model.addAttribute("pvo", prod);
+		psvo.setTranCode("000"); 
+		purchaseService.addPurchase(psvo); 
+		
+		model.addAttribute("psvo", psvo);
+		
 		return "forward:/product/addedView.jsp";
 	}
+ 
 	
-	
-	// getProduct
-	@RequestMapping (  value="getProduct", method=RequestMethod.GET )
+	// getProduct)
+	@RequestMapping("/getProduct.do")
 	public String getProduct( @RequestParam("prodNo") int prodNo , Model model, @RequestParam("menu") String menu ) throws Exception {
 		  
-		Product prod = productService.getProduct(prodNo); 
+		Product prod = purchaseService.getProduct(prodNo); 
 		
-		System.out.println( menu );
 		model.addAttribute("menu",menu);
 		model.addAttribute("pvo", prod); // Model 과 View 연결
 		
 		return "forward:/product/getProduct.jsp";
 	}
 	
-	// updateProductView
-	@RequestMapping (  value="updateProduct", method=RequestMethod.GET )
-	public String updateProduct( @RequestParam("prodNo") int prodNo , Model model ) throws Exception{ 
-		Product prod = productService.getProduct(prodNo); 
+	@RequestMapping("/updateProductView.do")
+	public String updateUserView( @RequestParam("prodNo") int prodNo , Model model ) throws Exception{ 
+		Product prod = purchaseService.getProduct(prodNo); 
 		model.addAttribute("pvo", prod);   
 		return "forward:/product/updateProduct.jsp";
 	}
-	 
-	// updateProduct
-	@RequestMapping ( value="updateProduct", method=RequestMethod.POST )
-	public String updateProduct( @ModelAttribute("pvo") Product product , Model model ) throws Exception{
+	
+	//(O) 근데 날짜형식 ^^ 어떻게들어와도 되게 수정해야함~~
+	
+	@RequestMapping("/updateProduct.do")
+	public String updateUser( @ModelAttribute("pvo") Product product , Model model ) throws Exception{
 		
 		Product prod = product;
+		prod.setManuDay(prod.getManuDay().replace("-",""));
 		
-		String rlt = transDay (prod.getManuDay() );
-		prod.setManuDay(rlt);
-		
-		productService.updateProduct(product);
-		  
+		purchaseService.updateProduct(product);
+		 
+		//return "redirect:/getProduct.do?prodNo="+product.getProdNo();
+
 		model.addAttribute("pvo", prod);
+		
 		return "forward:/product/addedView.jsp";
 	}
+
  
- 
-	private String transDay( String manuDay ) { 
-		String date = manuDay.replace("-","").trim() ; 
-		if( date.length() <= 8 ) {
-			date.substring(2);
-		} 
-		return date;
-	} 
 	
-	//ListProduct
-	@RequestMapping ( value="listProduct" )
+	
+	//(O) 
 	public String listProduct( @ModelAttribute("search") Search search , Model model , 
-							@RequestParam("menu") String menu, 
+							@RequestParam("menu") String menu,
 							HttpServletRequest request) throws Exception{
 		
 		//받아오는 메뉴값.  
-		System.out.println("[]메뉴값:"+menu);      
-	 
+		System.out.println("[]메뉴값:"+menu);
+		
 		// 현재 페이지
 		if(search.getCurrentPage() ==0 ){
 			search.setCurrentPage(1);
@@ -123,7 +115,7 @@ public class ProductController {
 		search.setPageSize(pageSize);
 		
 		// 리스트받아오기
-		Map<String , Object> map = productService.getProductList(search);
+		Map<String , Object> map = purchaseService.getProductList(search);
 		
 		Page resultPage = new Page( search.getCurrentPage(), ((Integer)map.get("totalCount")).intValue(), pageUnit, pageSize);
 		
@@ -136,4 +128,7 @@ public class ProductController {
 		
 		return "forward:/product/listProduct.jsp";
 	}
+
+
+
 }
